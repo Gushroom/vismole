@@ -12,7 +12,7 @@ const LIGHTRED = 0xFFCCCB;
 const LIGHTGREEN = 0x90ee90;
 const LIGHTBLUE = 0xADD8E6;
 // Define texture of atoms
-const atomTexture = new THREE.TextureLoader().load("atom-texture.png");
+const TEXTURE = new THREE.TextureLoader().load("atom-texture.png");
 
 // Initialize threejs globals
 function init(){
@@ -36,12 +36,12 @@ function init(){
 
 }
 
-function addtoScene(){
+function add_to_scene(){
     scene.add(LIGHT);
     scene.add(axes);
     scene.add(grids);
 
-    let mole = defStructure("methane"); // This line will be replaced to read from GUI
+    let mole = _def_mole("methane"); // This line will be replaced to read from GUI
     mole.position.set(2, 2, 2);// This line will be replaced to read from GUI or used to draw mutiple molecules 
     scene.add(mole);
 
@@ -62,7 +62,7 @@ function animate(){
 /*
     Define molecule based on library or build with given formula
 */
-function defMole(moleId, structure/* A tree or linkedlist node that contains necessary info */){
+function _def_mole(moleId, structure/* A tree or linkedlist node that contains necessary info */){
     let mole = new THREE.Group();
     let struct = new THREE.Geometry();
     switch(moleId){
@@ -72,14 +72,14 @@ function defMole(moleId, structure/* A tree or linkedlist node that contains nec
                 if(i % 2 == 0){
                     let line = new THREE.Vector3(i, 0, 0);
                     struct.vertices.push(line);
-                    let atom = new THREE.Points(struct, defAtoms(2, LIGHTGREEN));
+                    let atom = new THREE.Points(struct, _def_atom(2, LIGHTGREEN));
                     mole.add(atom);
                 } 
                 else{
                     let struct1 = new THREE.Geometry();
                     let line1 = new THREE.Vector3(i, 0, 0);
                     struct1.vertices.push(line1);
-                    let atom = new THREE.Points(struct1, defAtoms(2, LIGHTRED));
+                    let atom = new THREE.Points(struct1, _def_atom(2, LIGHTRED));
                     mole.add(atom);
                 }
             }
@@ -128,7 +128,7 @@ function defMole(moleId, structure/* A tree or linkedlist node that contains nec
             // console.log("fifth position added");
 
             // Specify how atoms look like
-            let atom = new THREE.Points(struct, defAtoms(2, LIGHTGREEN));
+            let atom = new THREE.Points(struct, _def_atom(2, LIGHTGREEN));
             mole.add(atom);
             
             // console.log(struct.vertices);
@@ -147,11 +147,11 @@ function defMole(moleId, structure/* A tree or linkedlist node that contains nec
     Draw atoms based on request
     generate one kind of atom per call
 */
-function defAtoms(size, color /* atomId will replace these two */ ){
+function _def_atom(size, color /* atomId will replace these two */ ){
     let atom = new THREE.PointsMaterial({
         size:size, 
         color: color, 
-        map: atomTexture, 
+        map: TEXTURE, 
         transparent:true, 
         opacity: 1, 
         alphaTest: 0.5
@@ -159,7 +159,7 @@ function defAtoms(size, color /* atomId will replace these two */ ){
     return atom;
 }
 
-function inputFlow(fileName){
+function get_input(fileName){
     // Reads input file here and return a tree or a linkedlist
     // return moleInfo
 }
