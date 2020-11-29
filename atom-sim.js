@@ -30,34 +30,20 @@ function init(){
 
     // Init axes
     axes = new THREE.AxesHelper(10);// Length of the axes' arm
-    /* 
-        Init grids
-        Upgrade needed, grid needs to be 3d
-    */
+    
+    // Init grids
     grids = new THREE.GridHelper(20, 20);// (size, divisons)
 
 }
 
-function addElements(){
+function addtoScene(){
     scene.add(LIGHT);
     scene.add(axes);
     scene.add(grids);
 
-    let o0 = createAtom(1.5, LIGHTGREEN);
-    let h0 = createAtom(0.8, LIGHTBLUE);
-    let h1 = createAtom(0.8, LIGHTBLUE);
-    /*
-        Below are hard-coded positions, to debug createAtom()
-        Nah, seeing a molecule is so satisfying
-    */
-    o0.position.set(2, 2, 2);
-    h0.position.set(2.25, 1.9, 2);
-    h1.position.set(1.75, 1.9, 2);
-    scene.add(o0);
-    scene.add(h0);
-    scene.add(h1);
-
-    placeMol(16, 5, 5, 5);
+    let mole = defStructure("methane"); // This line will be replaced to read from GUI
+    mole.position.set(2, 2, 2);// This line will be replaced to read from GUI or used to draw mutiple molecules 
+    scene.add(mole);
 
     camera.position.set(10, 10, 10);
     controls.update();
@@ -66,7 +52,7 @@ function addElements(){
 }
 
 function animate(){
-    // Refresh output
+
     requestAnimationFrame(animate);
 
     controls.update();
@@ -74,72 +60,106 @@ function animate(){
     renderer.render(scene, camera);
 }
 /*
-    Each call to this function produce an instance of an particular atom
-    Atom:
-        color(respective or absolute);
-        size(respective or absolute);
-        maybe position? (currently handled at makeMol)
-
-*/ 
-function createAtom(/* atomId, */size, color){
-    /*
-        (I suppose)In real practice, this function will grab the id from 
-        the array created by elementsFlow(), which contains all input particles we need to draw
-        all attributes to an atom will be packed into the array element
-        for now, it will just run on different pre-set attributes
-    */
-
-   let atomGeometry = new THREE.Vector3(2, 2, 2); 
-   let atomPos = new THREE.Geometry();
-   atomPos.vertices.push(atomGeometry);
-   let atomMaterial = new THREE.PointsMaterial({size:size, color: color, map: atomTexture, transparent:true, opacity: 0.8});
-
-   let atom = new THREE.Points(atomPos, atomMaterial);
-
-   return atom;
-}
-
-/*
-    Position different atoms and group them, make correct molecules
-    Question is: do I need a library of all existing molecules?
-    Solution I thought about:
-        One makeMol have a cache-like library for freqently used molecules
-        Another takes a definition as parameter and construct the molecule
-    Below is the first approach, construct molecules based on their id
+    Define molecule based on library or build with given formula
 */
-function makeMolbyId(moleId){
-    // Define molecule
-    mole = new THREE.Group();
-    // Identify target molecule
+function defMole(moleId, structure/* A tree or linkedlist node that contains necessary info */){
+    let mole = new THREE.Group();
+    let struct = new THREE.Geometry();
     switch(moleId){
-        case 16:
-        // The actual make process can be put in different functions
-            // Place atoms
-            let startPos = new THREE.Vector3(3, 3, 3);
-            let c = createAtom(1, LIGHTRED);
-            mole.add(c, startPos);
+        case "line":
+            // A case for learning and debugging
+            for(let i = 0; i < 10; i++){
+                if(i % 2 == 0){
+                    let line = new THREE.Vector3(i, 0, 0);
+                    struct.vertices.push(line);
+                    let atom = new THREE.Points(struct, defAtoms(2, LIGHTGREEN));
+                    mole.add(atom);
+                } 
+                else{
+                    let struct1 = new THREE.Geometry();
+                    let line1 = new THREE.Vector3(i, 0, 0);
+                    struct1.vertices.push(line1);
+                    let atom = new THREE.Points(struct1, defAtoms(2, LIGHTRED));
+                    mole.add(atom);
+                }
+            }
+            console.log("line");
             break;
+        case "box":
+            // An abolished case for learning and debugging
+            console.log("box");
+            break;
+        case "methane":
+            /*
+                The most active example, draws a methane with angles
+                Code below uses a linkedlist-like approach:
+                c -> h0 -> h1 -> h2 -> h3
+                which means, c doesnt know where h1 is, only h0 knows
+                Another approach will be tree-like:
+                c -> h0, c -> h1, c -> h2, c -> h3
+                this way makes it easier to draw bonds, and more complex molecules
+                but I dont have the data to try it
+                It is not hard to implement based on what I have below
+            */
+            const startPos = new THREE.Vector3( 0, 0, 0 );
+            struct.vertices.push(startPos);
+            // Push the first vertex(list head) into structure geometry
+            // console.log("first position added");
+
+            /*
+                The following few lines find positions for other atoms
+                based on their predecessor, and push infomation into structure geometry
+            */
+            const secondPos = new THREE.Vector3( 0, 0, 2 );
+            struct.vertices.push(secondPos);
+            // console.log("second position added");
+            
+            let angle = 109.5;
+            const thirdPos = secondPos.clone().applyMatrix4( new THREE.Matrix4().makeRotationX(angle * ( Math.PI / 180 )) );
+            struct.vertices.push(thirdPos);
+            // console.log("third position added");
+
+            const fourthPos = thirdPos.clone().applyMatrix4( new THREE.Matrix4().makeRotationZ(120 * ( Math.PI / 180 )) );
+            struct.vertices.push(fourthPos);
+            // console.log("fourth position added");
+            
+            const fifthPos = fourthPos.clone().applyMatrix4( new THREE.Matrix4().makeRotationZ(120 * ( Math.PI / 180 )) );
+            struct.vertices.push(fifthPos);
+            // console.log("fifth position added");
+
+            // Specify how atoms look like
+            let atom = new THREE.Points(struct, defAtoms(2, LIGHTGREEN));
+            mole.add(atom);
+            
+            // console.log(struct.vertices);
+            console.log("methane created");
+            break;
+
         default:
-            console.log("Molecule requested not found in library");
-            // mole = makeMolbyStruct()
+            console.log("Request not found");
+            // mole = structHelper(structure);
     }
+
     return mole;
 }
 
-function makeMolbyStruct(structure, atom/* atom will be an array that holds all atoms needed */){
-    // Magic
-    return mole;
-    // No magic
-    // console.log("Nah, can't make it for ya");
-}
 /*
-    Place molecules made by makeMol and put molecules on right position
+    Draw atoms based on request
+    generate one kind of atom per call
 */
-function placeMol(moleId, xPos, yPos, zPos){
-    makeMol(moleId).position.set(xPos, yPos, zPos);
-    scene.add(makeMol(moleId));
+function defAtoms(size, color /* atomId will replace these two */ ){
+    let atom = new THREE.PointsMaterial({
+        size:size, 
+        color: color, 
+        map: atomTexture, 
+        transparent:true, 
+        opacity: 1, 
+        alphaTest: 0.5
+    });
+    return atom;
 }
-function inputFlow(/* Some way to read input flow*/){
-    // let particle = FileReader.readAsArrayBuffer();
 
+function inputFlow(fileName){
+    // Reads input file here and return a tree or a linkedlist
+    // return moleInfo
 }
