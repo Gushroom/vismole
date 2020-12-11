@@ -115,3 +115,42 @@ no this is bad, BAD
 node存两个东西 这个atom，这个atom连着谁和链接的角度
 实现的时候真香链表。。。
 今日git master更新
+clone可以有效避免vertex数据被改动 用clone apply matrix会生成新的点
+不用clone会把matrix加到原来的vertex上
+
+// 2020.12.1 --final week--
+THREE.Geometry.colors : Array
+Array of vertex colors, matching number and order of vertices.
+
+This is used by Points and Line and any classes derived from those such as LineSegments and various helpers. Meshes use Face3.vertexColors instead of this.
+
+To signal an update in this array, Geometry.colorsNeedUpdate needs to be set to true.
+
+// 2020.12.6 --deus ex machina--
+parse input file
+first element in line is atom, define its name and color
+next three are matrix, store in float32array
+vertex colors are uint8array with 3rd parameter set to true, which normalize the array
+both hex and decimal works r, g, b
+bond怎么画啊卧槽我人傻了
+我怎么知道哪个和哪个之间有bond又是什么bond呢
+先把inputfile相关弄出来
+哦还有一个NERF算法要处理
+
+// 2020.12.8 --JSON暂时滴神--
+for(i = 0, i < allatoms, i++){
+    for(j = 1, j < allatoms, j++){
+        switch( _bond_type(i, j) ){
+            case "ionic":
+                geometry = i, j;
+                material = ionic;
+                bond = new THREE.LineSegment(geometry, material);
+                break;
+            default:
+            // no bond between i, j
+            break;
+        }
+    }
+}
+
+// 

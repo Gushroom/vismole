@@ -1,0 +1,15 @@
+{
+  "name": "atom-sim",
+  "version": "1.0.0",
+  "description": "可视化界面",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^11.0.4"
+  }
+}

@@ -12,7 +12,24 @@ const LIGHTRED = 0xFFCCCB;
 const LIGHTGREEN = 0x90ee90;
 const LIGHTBLUE = 0xADD8E6;
 // Define texture of atoms
-const TEXTURE = new THREE.TextureLoader().load("atom-texture.png");
+const TEXTURE = new THREE.TextureLoader().load("src/atom-texture.png");
+
+// Define Structures used here
+let atomsArray = ["c", "h", "h", "h", "h"];
+let atomPosition = new Float32Array([
+    0.000000, 0.000000, 0.000000,
+    0.000000, 0.000000, 1.089000, 
+    1.026719, 0.000000, -0.363000,
+    -0.513360, -0.889165, -0.363000, 
+    -0.513360, 0.889165, -0.363000
+]);
+let bondInfo = [
+    [0, 1, 'cov'],
+    [0, 2, 'cov'],
+    [0, 3, 'cov'],
+    [0, 4, 'cov'],
+    [0, 5, 'cov']
+];
 
 // Initialize threejs globals
 function init(){
@@ -24,7 +41,7 @@ function init(){
     renderer.setSize(window.innerWidth, window.innerHeight);// Different size? Now it occupies the entire window
 
     // Init perspective camera
-    camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 1000);// Explore better settings?
+    camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 1000);
     // Init orbit control for moving camera
     controls = new THREE.OrbitControls(camera, renderer.domElement);
 
@@ -41,7 +58,7 @@ function add_to_scene(){
     scene.add(axes);
     scene.add(grids);
 
-    let mole = _def_mole("methane"); // This line will be replaced to read from GUI
+    let mole = _def_mole(); // This line will be replaced to read from GUI
     mole.position.set(2, 2, 2);// This line will be replaced to read from GUI or used to draw mutiple molecules 
     scene.add(mole);
 
@@ -62,104 +79,102 @@ function animate(){
 /*
     Define molecule based on library or build with given formula
 */
-function _def_mole(moleId, structure/* A tree or linkedlist node that contains necessary info */){
+function _def_mole(){
+
     let mole = new THREE.Group();
-    let struct = new THREE.Geometry();
-    switch(moleId){
-        case "line":
-            // A case for learning and debugging
-            for(let i = 0; i < 10; i++){
-                if(i % 2 == 0){
-                    let line = new THREE.Vector3(i, 0, 0);
-                    struct.vertices.push(line);
-                    let atom = new THREE.Points(struct, _def_atom(2, LIGHTGREEN));
-                    mole.add(atom);
-                } 
-                else{
-                    let struct1 = new THREE.Geometry();
-                    let line1 = new THREE.Vector3(i, 0, 0);
-                    struct1.vertices.push(line1);
-                    let atom = new THREE.Points(struct1, _def_atom(2, LIGHTRED));
-                    mole.add(atom);
-                }
-            }
-            console.log("line");
-            break;
-        case "box":
-            // An abolished case for learning and debugging
-            console.log("box");
-            break;
-        case "methane":
-            /*
-                The most active example, draws a methane with angles
-                Code below uses a linkedlist-like approach:
-                c -> h0 -> h1 -> h2 -> h3
-                which means, c doesnt know where h1 is, only h0 knows
-                Another approach will be tree-like:
-                c -> h0, c -> h1, c -> h2, c -> h3
-                this way makes it easier to draw bonds, and more complex molecules
-                but I dont have the data to try it
-                It is not hard to implement based on what I have below
-            */
-            const startPos = new THREE.Vector3( 0, 0, 0 );
-            struct.vertices.push(startPos);
-            // Push the first vertex(list head) into structure geometry
-            // console.log("first position added");
+    const structure = new THREE.BufferGeometry();
+    let vertices = atomPosition;
+    let atomColors = _atom_to_color(atomsArray);
 
-            /*
-                The following few lines find positions for other atoms
-                based on their predecessor, and push infomation into structure geometry
-            */
-            const secondPos = new THREE.Vector3( 0, 0, 2 );
-            struct.vertices.push(secondPos);
-            // console.log("second position added");
-            
-            let angle = 109.5;
-            const thirdPos = secondPos.clone().applyMatrix4( new THREE.Matrix4().makeRotationX(angle * ( Math.PI / 180 )) );
-            struct.vertices.push(thirdPos);
-            // console.log("third position added");
+    structure.addAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
+    structure.addAttribute('color', new THREE.BufferAttribute(atomColors, 3, true));
+    structure.computeBoundingSphere();
 
-            const fourthPos = thirdPos.clone().applyMatrix4( new THREE.Matrix4().makeRotationZ(120 * ( Math.PI / 180 )) );
-            struct.vertices.push(fourthPos);
-            // console.log("fourth position added");
-            
-            const fifthPos = fourthPos.clone().applyMatrix4( new THREE.Matrix4().makeRotationZ(120 * ( Math.PI / 180 )) );
-            struct.vertices.push(fifthPos);
-            // console.log("fifth position added");
+    let atomsMaterial = new THREE.PointsMaterial({
+        size:2, 
+        vertexColors: true,
+        map: TEXTURE, 
+        transparent:true, 
+        opacity: 1, 
+        alphaTest: 0.5
+    });
 
-            // Specify how atoms look like
-            let atom = new THREE.Points(struct, _def_atom(2, LIGHTGREEN));
-            mole.add(atom);
-            
-            // console.log(struct.vertices);
-            console.log("methane created");
-            break;
+    let atoms = new THREE.Points(structure, atomsMaterial);
 
-        default:
-            console.log("Request not found");
-            // mole = structHelper(structure);
+    mole.add(atoms);
+
+    for(let pair = 0; pair < bondInfo.length; pair++){
+        switch(bondInfo[pair][2]){
+            case "cov":
+                console.log(_atom_to_vertices(bondInfo[pair][0], bondInfo[pair][1]));
+                bondGeometry = new THREE.BufferGeometry().setFromPoints(_atom_to_vertices(bondInfo[pair][0], bondInfo[pair][1]));
+                bondMaterial = new THREE.LineBasicMaterial({color: LIGHTBLUE});
+                bondGeometry.computeBoundingSphere();
+                bond = new THREE.Line(bondGeometry, bondMaterial);
+                mole.add(bond);
+                break;
+            default:
+                break;
+        }
     }
 
     return mole;
 }
 
 /*
-    Draw atoms based on request
-    generate one kind of atom per call
+    Define atoms' color based on CPK color index
 */
-function _def_atom(size, color /* atomId will replace these two */ ){
-    let atom = new THREE.PointsMaterial({
-        size:size, 
-        color: color, 
-        map: TEXTURE, 
-        transparent:true, 
-        opacity: 1, 
-        alphaTest: 0.5
-    });
-    return atom;
+
+function _atom_to_color(){
+    let vertexColors = [];
+    for(let i = 0; i < atomsArray.length; i++){
+        switch(atomsArray[i]){
+            case "c":
+                vertexColors.push(0xC8);
+                vertexColors.push(0xC8);
+                vertexColors.push(0xC8);
+                break;
+            case "h":
+                vertexColors.push(0xFF);
+                vertexColors.push(0xFF);
+                vertexColors.push(0xFF);
+                break;
+            default:
+                vertexColors.push(0xFF);
+                vertexColors.push(0x14);
+                vertexColors.push(0x93);
+        }
+    }
+    vertexColors = Uint8Array.from(vertexColors);
+    return vertexColors;
 }
 
-function get_input(fileName){
-    // Reads input file here and return a tree or a linkedlist
-    // return moleInfo
+/*
+    returns an array with two Vector3, which represent two atoms a bond will connect
+*/
+function _atom_to_vertices(atom1, atom2){
+    let points = [];
+    let start = atom1 * 3;
+    let end = atom2 * 3;
+
+    vertices1 = new THREE.Vector3(atomPosition[start], atomPosition[start++], atomPosition[start+2]);
+    vertices2 = new THREE.Vector3(atomPosition[end], atomPosition[end++], atomPosition[end+2]);
+    points.push(vertices1);
+    points.push(vertices2);
+
+    return points;
 }
+/* 
+    Ajax call to load json file
+    currently not working
+*/
+function get_input(filename){
+    const request = new XMLHttpRequest();
+    request.onreadystatechange = function() {
+      if (this.readyState == 4 && this.status == 200) {
+      }
+    };
+    request.open("GET", "filename", true);
+    request.send();
+}
+

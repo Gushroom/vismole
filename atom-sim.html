@@ -6,14 +6,14 @@
 
         <meta charset="UTF-8">
         <!-- Import THREEjs sources -->
-        <script type= "text/javascript" charset="UTF-8" src="three.js"></script>
-        <script type= "text/javascript" charset="UTF-8" src="TrackballControls.js"></script>
-        <script type= "text/javascript" charset="UTF-8" src="OrbitControls.js"></script>
+        <script type= "text/javascript" charset="UTF-8" src="src/three.js"></script>
+        <script type= "text/javascript" charset="UTF-8" src="src/TrackballControls.js"></script>
+        <script type= "text/javascript" charset="UTF-8" src="src/OrbitControls.js"></script>
         <!-- Import project specific source -->
         <script type= "text/javascript" src="atom-sim.js"></script>
         <!-- script type= "text/javascript" src="point-sprite.js"></script -->
         <!-- Import web page settings-->
-        <link rel="stylesheet" href="default.css">
+        <link rel="stylesheet" href="src/default.css">
 
     </head>
 
@@ -25,22 +25,10 @@
         <script type="text/javascript">
             /* The following code is used for atom-sim, a sphere approach*/
             (function(){
-                // There are spaces to add/delete/modify these functions
-                // For more defination of these functions, see point-sprite.js
                 init();
                 add_to_scene();
                 animate();
             })();
-           /* The following code is used for point-sprite, a point approach
-           (function(){
-                // There are spaces to add/delete/modify these functions
-                // For more defination of these functions, see point-sprite.js
-                init();
-                createAtom();
-                setUp();
-                animate();
-            })();
-            */
         </script>
 
     </body>
