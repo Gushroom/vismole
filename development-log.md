@@ -194,3 +194,6 @@ Vector3.fromArray(atomPosition, start);
 input格式和这个越接近就越好改
 差非常远就得重来
 github issue里拿到一个格式 好耶 燃起来了
+naisuuuuuuuuuuuuuuuuuuuuuuuu
+起飞
+这个0和1的问题必须讨论一下 草

@@ -14,37 +14,49 @@ const LIGHTBLUE = 0xADD8E6;
 // Define texture of atoms
 const TEXTURE = new THREE.TextureLoader().load("src/atom-texture.png");
 
-/*
-    !!!
-    Let me know if input JSON format will look VERY different from this!
-*/
+
 let jsonInput = {
-    "atoms": [
-        "c", "h", "h", "h", "h"
-    ],
-    "atomPosition":[
-        0.000000, 0.000000, 0.000000,
-    
-        0.000000, 0.000000, 1.089000,
-    
-        1.026719, 0.000000, -0.363000,
-    
-        -0.513360, -0.889165, -0.363000,
-   
-        -0.513360, 0.889165, -0.363000
-    ],
-    "bondInfo": [
-        [0, 1, 'cov'],
-        [0, 2, 'cov'],
-        [0, 3, 'cov'],
-        [0, 4, 'cov']
-    ]
+    "items": [
+        {"label": "1", "type": "1", "parent": null, "path": "world/1/1", "x": 0.0, "y": 0.0, "z": 0.0}, 
+        {"label": "2", "type": "2", "parent": null, "path": "world/1/2", "x": 0.7555, "y": 0.5876, "z": 0.0}, 
+        {"label": "3", "type": "1", "parent": null, "path": "world/1/3", "x": 1.5111, "y": 0.0, "z": 0.0}, 
+        {"label": "4", "type": "1", "parent": null, "path": "world/2/4", "x": 0.0, "y": 0.0, "z": 3.3686}, 
+        {"label": "5", "type": "2", "parent": null, "path": "world/2/5", "x": 0.7555, "y": 0.5876, "z": 3.3686}, 
+        {"label": "6", "type": "1", "parent": null, "path": "world/2/6", "x": 1.5111, "y": 0.0, "z": 3.3686}, 
+        {"label": "7", "type": "1", "parent": null, "path": "world/3/7", "x": 0.0, "y": 0.0, "z": 6.7372}, 
+        {"label": "8", "type": "2", "parent": null, "path": "world/3/8", "x": 0.7555, "y": 0.5876, "z": 6.7372}, 
+        {"label": "9", "type": "1", "parent": null, "path": "world/3/9", "x": 1.5111, "y": 0.0, "z": 6.7372}], 
+        "bonds": [[1, "1", "2"], [1, "2", "3"], [1, "4", "5"], [1, "5", "6"], [1, "7", "8"], [1, "8", "9"]]
 };
 
 // get useful data for drawing from JSON input
-let atomsArray = jsonInput.atoms;
-let atomPosition = Float32Array.from( jsonInput.atomPosition );
-let bondInfo = jsonInput.bondInfo;
+function _get_atom_type(thisMole){
+    let tempArray = [];
+    for (let i = 0; i < thisMole.items.length; i++){
+        tempArray.push(thisMole.items[i].type);
+    }
+    return tempArray;
+}
+let atomsArray = _get_atom_type(jsonInput);
+function _get_atom_position(thisMole){
+    let tempArray = [];
+    for(let i = 0; i < thisMole.items.length; i++){
+        tempArray.push(thisMole.items[i].x);
+        tempArray.push(thisMole.items[i].y);
+        tempArray.push(thisMole.items[i].z);
+    }
+    return tempArray;
+
+}
+let atomPosition = Float32Array.from( _get_atom_position(jsonInput) );
+function _get_bond_info(thisMole){
+    let tempArray = [];
+    for(let i = 0; i < thisMole.bonds.length; i++){
+        tempArray.push(thisMole.bonds[i]);
+    }
+    return tempArray;
+}
+let bondInfo = _get_bond_info(jsonInput);
 
 
 // Initialize threejs globals
@@ -74,15 +86,14 @@ function add_to_scene(){
     scene.add(axes);
     scene.add(grids);
 
-    let mole;
-    // Here I am just exploring the possiblity to draw mutiple moles
-    // Later we might be able to apply complex matrix to their posion and rotation etc.
-    for(let i = 0; i < 10; i = i + 2){
-        mole = _def_mole(); // One instance of one mole;
-        // I could possibly support a few different moles to be rendered at the same time
-        mole.position.set(i, 2, 2);
-        scene.add(mole);
-    }
+    // Debug info
+    console.log(atomsArray);
+    console.log(atomPosition);
+    console.log(bondInfo);
+
+    let mole = _def_mole();
+    mole.position.set(2, 2, 2);
+    scene.add(mole);
     
     camera.position.set(10, 10, 10);
     controls.update();
@@ -102,6 +113,7 @@ function animate(){
     Define molecule based on library or build with given formula
 */
 function _def_mole(){
+
     // Defines a group, it is a collection of atoms and bonds, pretty much like what molecules are in real life.
     let mole = new THREE.Group();
 
@@ -140,26 +152,26 @@ function _def_mole(){
 
     // Implement bonds
     for(let pair = 0; pair < bondInfo.length; pair++){ // loop through bonded pairs
-        switch(bondInfo[pair][2]){
+        switch(bondInfo[pair][0]){
             // There can be all sorts of bonds, or even just true/false works
-            case "cov": 
+            case 1: 
                 // console.log(_atom_to_vertices(bondInfo[pair][0], bondInfo[pair][1])); // to see exactly where bonds are drawn
-                bondGeometry = new THREE.BufferGeometry().setFromPoints(_atom_to_vertices(bondInfo[pair][0], bondInfo[pair][1]));
+                bondGeometry = new THREE.BufferGeometry().setFromPoints(_atom_to_vertices(+bondInfo[pair][1], +bondInfo[pair][2]));
                 // Material can be replaced by source texture pictures, now they just differ in color
                 bondMaterial = new THREE.LineBasicMaterial({color: LIGHTBLUE});
                 bond = new THREE.Line(bondGeometry, bondMaterial);
                 mole.add(bond);
                 break;
-            case "ionic":
+            case 2:
                 // console.log(_atom_to_vertices(bondInfo[pair][0], bondInfo[pair][1])); // to see exactly where bonds are drawn
-                bondGeometry = new THREE.BufferGeometry().setFromPoints(_atom_to_vertices(bondInfo[pair][0], bondInfo[pair][1]));
+                bondGeometry = new THREE.BufferGeometry().setFromPoints(_atom_to_vertices(+bondInfo[pair][1], +bondInfo[pair][2]));
                 bondMaterial = new THREE.LineBasicMaterial({color: LIGHTGREEN});
                 bond = new THREE.Line(bondGeometry, bondMaterial);
                 mole.add(bond);
                 break;
-            case "metal":
+            case 3:
                 // console.log(_atom_to_vertices(bondInfo[pair][0], bondInfo[pair][1])); // to see exactly where bonds are drawn
-                bondGeometry = new THREE.BufferGeometry().setFromPoints(_atom_to_vertices(bondInfo[pair][0], bondInfo[pair][1]));
+                bondGeometry = new THREE.BufferGeometry().setFromPoints(_atom_to_vertices(+bondInfo[pair][1], +bondInfo[pair][2]));
                 bondMaterial = new THREE.LineBasicMaterial({color: LIGHTRED});
                 bond = new THREE.Line(bondGeometry, bondMaterial);
                 mole.add(bond);
@@ -176,26 +188,35 @@ function _def_mole(){
 /*
     Define atoms' color based on CPK color index
     This function will expand to cover more atoms
+    I'd love to see how these index map to atoms
+    like "1" = "h", "2" = "o" etc.
 */
 function _atom_to_color(){
     let vertexColors = [];
     // Similar to atomPostion, the array of atoms can be specified here, so we get to draw different moles
     for(let i = 0; i < atomsArray.length; i++){
         switch(atomsArray[i]){
-            case "c":
-                vertexColors.push(0xC8);
-                vertexColors.push(0xC8);
-                vertexColors.push(0xC8);
+            case "1":
+                vertexColors.push(0xFF);
+                vertexColors.push(0xFF);
+                vertexColors.push(0xFF);
                 break;
-            case "h":
+
+            case "2":
                 vertexColors.push(0xFF);
-                vertexColors.push(0xFF);
-                vertexColors.push(0xFF);
+                vertexColors.push(0x0D);
+                vertexColors.push(0x0D);
+                break;
+            case "3":
+                vertexColors.push(0x90);
+                vertexColors.push(0x90);
+                vertexColors.push(0x90);
                 break;
             default:
                 vertexColors.push(0xFF);
                 vertexColors.push(0x14);
                 vertexColors.push(0x93);
+                break;
         }
     }
 
@@ -210,8 +231,8 @@ function _atom_to_color(){
 */
 function _atom_to_vertices(atom1, atom2){
     let points = [];
-    let start = atom1 * 3;
-    let end = atom2 * 3;
+    let start = (atom1-1) * 3;
+    let end = (atom2-1) * 3;
 
     /* 
         The whole concept here is Vector3.fromArray(array, index) gets index, index++, index+2 in to x, y, z, respectively
