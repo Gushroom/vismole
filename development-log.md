@@ -153,4 +153,44 @@ for(i = 0, i < allatoms, i++){
     }
 }
 
-// 
+// 2020.12.9 --read, parse, store, use--
+读取json然后parse怎么看着简单做起来这么难？
+就离谱
+首先我应该在html里面加上文件名
+然后在js里面弄一个ajax call 这样就输入了整个json
+然后再根据json分出三部分
+atomlist，用来定义颜色
+atomposition，定义位置
+bondinfo，定义bond
+array = typedArray.from(array)可以重新定义type
+
+// 2020.12.10 --原来我是一只，酒醉的蝴蝶--
+被朋友循环了一天的歌给洗脑了，一晚上没睡好
+根据bondinfo是[atom1, atom2, bondtype]的结构 implemented draw_bond的部分
+for(loop thru all bonds in bondInfo){
+    switch(bondtype){
+        case "bondtype":
+            geometry = atom1~atom2; //这需要是个array of vector3
+            material = bondtype;
+            bond = new THREE.LineSegments(geometry, material);
+    }
+}
+然后是一个helper 
+atom1是这个分子里第x个原子, 在position的array里面就是x*3 + 1
+x从0开始算，array
+
+// 2020.12.11 --computers are stupid--
+计算数据的地方会出问题我是万万没想到的
+今天和bug相面一整天未果，裂开
+
+// 2020.12.12 --和妹子打电话有助于改代码？--
+bond的数据计算问题在早上和妹子打电话的时候突然就通了
+Vector3.fromArray(atomPosition, start);
+解决了上面helper的数据算不准的问题
+让人怀疑我昨天都干了什么
+添加了一些注释方便理解
+在代码一开始的地方添加了个json格式的东西
+因为还是不会read_file
+input格式和这个越接近就越好改
+差非常远就得重来
+github issue里拿到一个格式 好耶 燃起来了
