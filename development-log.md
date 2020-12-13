@@ -194,3 +194,18 @@ Vector3.fromArray(atomPosition, start);
 input格式和这个越接近就越好改
 差非常远就得重来
 github issue里拿到一个格式 好耶 燃起来了
+naisuuuuuuuuuuuuuuuuuuuuuuuu
+起飞
+这个0和1的问题必须讨论一下 草
+
+// 2020.12.13 --多听，多想，少说--
+bond非常难搞
+尤其是用cylinder 目前甚至很难想到实现的可能性
+three自带一个fileloader
+可以先加上试试看
+可以打印到console的东西
+不可以赋值给全局变量
+是什么鬼
+...行叭 整个代码结构都让我拆了
+asyn call在这里可以说是相当难用了
+希望后面数据大了不会让人失望吧
